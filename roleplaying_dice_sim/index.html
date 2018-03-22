@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Programmable Dice Rolling Simulator </title>
+        <script src="./dice.js"></script>
+        <script src="https://www.google.com/jsapi"></script>
+        <link rel="stylesheet" type="text/css" href="./style.css">
+        <link href='http://fonts.googleapis.com/css?family=Roboto:400,900' rel='stylesheet' type='text/css'>
+    </head>
+
+    <body>
+        <h1> Role Playing Game Dice Simulator </h1>
+        <div id="container">
+            <div class="wrapper" id="readme">
+                <h3> ABOUT </h3>
+                <p>
+                    This is a statistics browser for calculating the probability of making more complicated dice
+                    rolls found in games such as Dungeons And Dragons or Pathfinder.
+                </p>
+                <p>
+                    Certain dice rolls are easy to reason about.  For example, what is the odds of rolling a 5
+                    while using a 6-sided dice?  The answer is obviously 1/6.  Using the Tabletop Dice Simulator
+                    syntax, this problem would be written <code> roll(6) </code>.
+                </p>
+                <p>
+                    Other rolls are much harder to intuit.  For example:
+                    "Roll three 20-sided dice.  Pick the largest number from these throws."
+                    Using TDS syntax, this is easily expressable as <code>max(roll_n(3, 20))</code>.
+                </p>
+                <p>
+                    What about the summing the smallest two out of three rolls of a d20: <code> sum(drop_max(roll_n(3, 20)))</code>.
+                </p>
+
+                <h3> FUNCTIONS </h3>
+
+                <p>
+                    <code> roll(d) </code> Rolls a `d`-sided dice and returns a value from 1 to d inclusive.
+                </p>
+                <p>
+                    <code> roll_n(n, d) </code>  Rolls a `d`-sided dice `n` times and returns the results of those rolls in an array.
+                </p>
+                <p>
+                    <code> sum(arr) </code> Takes an array of rolls and returns the sum.
+                </p>
+                <p>
+                    <code> max(arr) </code> Takes an array of rolls and returns the largest roll.
+                </p>
+                <p>
+                    <code> min(arr) </code> Takes an array of rolls and returns the smallest roll.
+                </p>
+                <p>
+                    <code> max_n(n, arr) </code> Takes a number `n` and an array of rolls and returns the largest `n` rolls in an array.
+                </p>
+                <p>
+                    <code> min_n(n, arr) </code> Takes a number `n` and an array of rolls and returns the smallest `n` rolls in an array.
+                </p>
+                <p>
+                    <code> drop_min(arr) </code> Takes an array of rolls and returns an array with the smallest roll missing.
+                </p>
+                <p>
+                    <code> drop_max(arr) </code> Takes an array of rolls and returns an array with the largest roll missing.
+                </p>
+                <p>
+                    <code> drop_min_n(n, arr) </code> Takes a number `n` and an array of rolls and returns an array with the smallest `n` rolls missing.
+                </p>
+                <p>
+                    <code> drop_max_n(n, arr) </code> Takes a number `n` and an array of rolls and returns an array with the largest `n` rolls missing.
+                </p>
+<!-- 
+                <h3> TODO </h3>
+                <ul>
+                    <li> Sort array before displaying on graph (need to do this for booleans too) </li>
+                    <li> Add an option to display "sum probabilities" such as "what are the odds that I'll roll a 5 or higher". </li>
+                    <li> Stop recomputing values when not necessary </li>
+                    <li> Save rolling functions to local storage </li>
+                    <li> Swap out the huge graphing library for D3 </li>
+                    <li> Rename my damn css style names </li> -->
+                </ul>
+
+            </div>
+
+            <div id="new_eq" class="wrapper">
+                <span>+</span>
+            </div>
+        </div>
+        <script>
+            var cache = {};
+
+            google.load('visualization', '1.1', {packages: ['bar']});
+            google.setOnLoadCallback(function() {
+                var container = document.querySelector("#container");
+                make_pair(container, "Roll a d6", "roll(6)");
+                make_pair(container, "Pick the largest roll from three rolls of a d20", "max(roll_n(3, 20))");
+                make_pair(container, "sum the smallest two out of three rolls of a d20:", "sum(drop_max(roll_n(3, 20)))");
+                make_pair(container, "Oh wow, it's actually just javascript", "Math.round(Math.random())");
+                setTimeout(function() { window.onresize(); }, 200);
+                document.querySelector("#new_eq").onclick = function() {
+                    make_pair(container, "Unnamed Dice Equation");
+                };
+            });
+
+            function make_pair(parent, eq_title, content) {
+                var wrapper = document.createElement("div");
+                var title = document.createElement("h2");
+                var remove = document.createElement("button");
+                var equation = document.createElement("input");
+                var graph = document.createElement("div");
+
+
+                wrapper.appendChild(remove);
+                wrapper.appendChild(title);
+                wrapper.appendChild(document.createElement("br"));
+                wrapper.appendChild(document.createElement("br"));
+                wrapper.appendChild(equation);
+                wrapper.appendChild(graph);
+
+                wrapper.classList.add("wrapper");
+                graph.classList.add("graph");
+
+
+                // Remove
+                remove.textContent = "X";
+                remove.onclick = function () {
+                    parent.removeChild(wrapper);
+                };
+
+
+                // TITLE
+                title.textContent = eq_title || "unnamed simulation";
+                title.onclick = function () {
+                    title.setAttribute("contentEditable", true);
+                };
+                title.onkeydown = function(event) {
+                    if (event.keyCode == 13) {
+                        title.setAttribute("contentEditable", false);
+                        console.log("NOT EDITABLE")
+                    }
+                };
+                title.onblur = function() {
+                    title.setAttribute("contentEditable", false);
+                    console.log("NOT EDITABLE")
+                };
+                title.classList.add("eq-title");
+
+
+                // EQUATION
+                function updateGraph() {
+                    var text = equation.value;
+                    fill_with_function(graph, text);
+                }
+                if (content) {
+                    equation.value = content;
+                    updateGraph();
+                }
+                equation.onkeydown = function(event) {
+                    if (event.keyCode == 13) {
+                        updateGraph();
+                    }
+                };
+                equation.onblur = updateGraph;
+                equation.classList.add("eq-input");
+
+                var prev = window.onresize;
+                window.onresize = function() {
+                    updateGraph();
+                    if (prev != null) {
+                        prev();
+                    }
+                }
+
+                parent.appendChild(wrapper);
+            }
+
+            function fill_with_function(element, s) {
+                var data;
+
+                if (cache[s]) {
+                    console.log("not recalc");
+                    data = cache[s];
+                } else {
+                    var f = new Function("return " + s);
+                    var t = typeof f();
+                    if (t != "number" && t != "boolean") {
+                        element.innerHTML = '';
+                        return;
+                    }
+
+                    data = exports.prepare_for_google_charts(exports.percentize(exports.poll(1000000, f)));
+                    cache[s] = data;
+                }
+
+                fill_with_chart(element, data);
+            }
+
+            function fill_with_chart(element, arr) {
+                var data = google.visualization.arrayToDataTable(arr);
+                var options = {
+                    title: null,
+                    chartArea: {width: '70%'},
+                    colors: ['#2F2F2F'],
+                    hAxis: {
+                        minValue: 0
+                    },
+                    vAxis: {
+                        title:"foo"
+                    },
+                    legend: { position: 'none' }
+                };
+                var chart = new google.charts.Bar(element);
+                chart.draw(data, options);
+            }
+        </script>
+    </body>
+</html>
+

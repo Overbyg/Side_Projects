@@ -1,0 +1,70 @@
+.backgroundTile_Dark, .backgroundTile_Light{
+	position: absolute;
+}
+
+.backgroundTile_Dark{
+	background-color: rgb(134, 51, 51);
+}
+
+.backgroundTile_Light{
+	background-color:rgb(158, 152, 152);
+}
+
+.movementTile{
+	box-shadow: 0 0 0 2px orange inset;
+	cursor: pointer;
+	z-index: 1;
+}
+
+.movementTile:hover{
+	box-shadow: 0 0 0 3px orange inset;
+}
+
+#game_area{
+	position: absolute;
+	height: 100%;
+	width: 100%;
+}
+
+.boardDisplay{
+	position: absolute;
+	border: 4px solid black;
+	width: 45%;
+	height: 80%;
+	z-index: 2;
+}
+
+.boardDisplay, .boardDisplay>* , #game_area{
+	padding: 0;
+	margin: 0;
+}
+
+#turn_display{
+	position: absolute;
+	top: 30%;
+	left: 50%;
+	font-size: 2em;
+}
+
+.unit{
+	position: absolute;
+	transition: all 0.75s;
+	z-index: 3;
+	font-size: 30px;
+	margin: 0px 0px -10px -8px;
+	font-weight: bolder;
+}
+
+.occupied:hover{
+	box-shadow: 0 0 0 3px orange inset;
+	z-index: 2;
+	cursor: pointer;
+}
+
+.player_1{
+	color: white;
+}
+
+.player_2{
+	color: black;
+}
